@@ -96,7 +96,6 @@ firebase.initializeApp(config);
 var intvl;
 onload = function() {
   load();
-  intvl = setInterval(updateLength);
 }
 quill.on('text-change', function(delta, oldDelta, source) {
   save();
@@ -107,7 +106,7 @@ function load() {
   var space = location.hash.replace("#", "").replace(/[.]/g, " ");
   namespace.value = space;
   firebase.database().ref(space).once('value').then(function(data) {
-    setTimeout(function(){ clearInterval(intvl) }, 2000);
+    setTimeout(updateLength, 2000);
     quill.setContents(data.val());
   });
 }
