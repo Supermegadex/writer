@@ -97,7 +97,7 @@ var intvl;
 onload = function() {
   updateLength();
   load();
-  intvl = setInterval(updateLength);
+  intvl = setInterval(updateLength, 2000);
 }
 quill.on('text-change', function(delta, oldDelta, source) {
   save();
