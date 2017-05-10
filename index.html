@@ -67,6 +67,7 @@
   <h1><span class="ql-font-monospace"># Welcome!</span></h1><p><span class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">This is </span><em class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">Writer</em><span class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">, an über-simple text editor/manager/whatever that saves everything in the cloud.</span></p><p><span class="ql-font-monospace" style="background-color: rgb(178, 107, 0);">No need to save your work as you go, nor worry about files--we take care of that for you.</span></p><p><br></p><h2><span class="ql-font-monospace">## How does it work?</span></h2><p><span class="ql-font-monospace">For now, just choose a </span><u class="ql-font-monospace">namespace</u><span class="ql-font-monospace"> down at the bottom. If it's new, we'll make a new document. Otherwise, pick up where you left off on any device; no need for an account.</span></p><p><br></p><p><span class="ql-font-monospace">Of course, we're still working on features, as new as we are. Take a look at </span><u class="ql-font-monospace">## In Development</u><span class="ql-font-monospace"> for more information.</span></p><p><br></p><h2><span class="ql-font-monospace">## Why use Writer?</span></h2><p><span class="ql-font-monospace">Well, the reason I decided to make writer is so that I could just start writing any time I wanted and not worry about storing my work. School projects could be drafted, stories could be written. All of this without a filesystem, email, or a cloud drive. Think of </span><em class="ql-font-monospace">Writer</em><span class="ql-font-monospace"> as a notes app but much more rich and completely cross-platform. It's </span><em class="ql-font-monospace">not</em><span class="ql-font-monospace"> meant for big nor media-rich projects, but it's great for informal papers, short stories, poetry, or just notes. Please know, however, that everything is public and could be viewed by anyone. Think before you post.</span></p><p><br></p><h2><span class="ql-font-monospace">## More information:</span></h2><p><span class="ql-font-monospace">I use the amazing&nbsp;open-source software </span><a class="ql-font-monospace" href="https://quilljs.com/" target="_blank">Quill</a><span class="ql-font-monospace"> for the actual text-editing functionality. I </span><em class="ql-font-monospace">highly</em><span class="ql-font-monospace"> recommend it. I also need to provide a license, which I have </span><a class="ql-font-monospace" href="https://write-zbdbwoafer.now.sh/" target="_blank">right here</a><span class="ql-font-monospace">.</span></p><p><br></p><h2><span class="ql-font-monospace">## In Development</span></h2><ul><li><span class="ql-font-monospace">Private workspaces: we are working on a feature that allows for a simple login for private spaces to write. No one will be able to see them, so you can rest easy knowing you will own the work. This is the first priority.</span></li><li><span class="ql-font-monospace">Real-time collaboration: any public workspace will show collaborators and instant changes to the document. Second priority.</span></li><li><span class="ql-font-monospace">Shared workspaces: like private, but you can share with specific users. Real-time collaboration will be implemented for better productivity.</span></li></ul>
 </div>
 <div id="bottom">
+  <span class="left">Word Count: <span id="word-count"></span></span>
   <input id="password" placeholder="namespace" />
 </div>
 <script src="https://cdn.quilljs.com/1.2.4/quill.js"></script>
@@ -108,6 +109,7 @@ var config = {
 };
 firebase.initializeApp(config);
 onload = function() {
+  updateLength();
   // load();
   /*
   namespace.addEventListener("keypress", function() {
@@ -123,6 +125,7 @@ onload = function() {
 }
 quill.on('text-change', function(delta, oldDelta, source) {
   save();
+  updateLength();
 });
 function save() {
   // localStorage.setItem("save", JSON.stringify(quill.getContents()));
@@ -132,7 +135,11 @@ function load() {
   // quill.setContents(JSON.parse(localStorage.getItem("save")));
   firebase.database().ref(namespace.value || "delta").once('value').then(function(data) {
     quill.setContents(data.val());
+    updateLength();
   });
+}
+function updateLength() {
+  var length = quill.getText().split(/\S+/g).length;
 }
 
 </script>
