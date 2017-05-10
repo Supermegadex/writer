@@ -93,9 +93,11 @@ var config = {
   databaseURL: "https://writer-6aa6d.firebaseio.com",
 };
 firebase.initializeApp(config);
+var intvl;
 onload = function() {
   updateLength();
-  load()
+  load();
+  intvl = setInterval(updateLength);
 }
 quill.on('text-change', function(delta, oldDelta, source) {
   save();
@@ -103,10 +105,11 @@ quill.on('text-change', function(delta, oldDelta, source) {
 });
 function load() {
   // quill.setContents(JSON.parse(localStorage.getItem("save")));
-  namespace.value = location.hash.replace("#", "");
-  firebase.database().ref(location.hash.replace("#", "")).once('value').then(function(data) {
+  var space = location.hash.replace("#", "").replace(/[.]/g, " ");
+  namespace.value = space;
+  firebase.database().ref(space).once('value').then(function(data) {
     quill.setContents(data.val());
-    updateLength();
+    setTimeout(function(){ clearInterval(intvl) }, 2000);
   });
 }
 function updateLength() {
