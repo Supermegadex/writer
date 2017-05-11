@@ -9,6 +9,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.quilljs.com/1.2.4/quill.snow.css">
   <link href="https://fonts.googleapis.com/css?family=Inconsolata|Libre+Baskerville|Quicksand" rel="stylesheet"> 
+  <script src="https://cdn.firebase.com/libs/firebaseui/1.0.1/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/1.0.1/firebaseui.css" />
   <style>
     body, html {
       background-color: #263238;
@@ -70,6 +72,25 @@
     .ql-editor .ql-font-monospace {
       font-family: "Inconsolata", Monaco, monospace !important;
     }
+    .hidden {
+      display: none;
+    }
+    .show {
+      display: block;
+      position: fixed;
+      z-index: 99999;
+      height: 100%;
+      width: 100%;
+	  top: 0;
+	  position: fixed;
+	  width: 100%;
+	  height: 100%;
+	  background: rgba(0, 0, 0, .8);
+	  padding-top: 25px;
+    }
+    a {
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -77,12 +98,14 @@
   Loading...
 </div>
 <div id="bottom">
-  <span class="left">Word Count: <span id="word-count"></span></span>
+  <span class="left">Word Count: <span id="word-count"></span>&nbsp;|&nbsp;<span id="name"></span> <a href="javascript:account()" id="account">Log In</a>&nbsp;<span id="private">|&nbsp;Private <input type="checkbox" id="prv" onclick="load()" />&nbsp;Visible <input type="checkbox" id="vis" onclick="load()" /></span></span>
   <input id="password" type="text" placeholder="namespace" pattern="[A-z0-9À-ž\s]" />
 </div>
+<div id="auth" class="hidden"></div>
 <script src="https://cdn.quilljs.com/1.2.4/quill.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-database.js"></script>
 
 <script>
@@ -111,26 +134,52 @@ var quill = new Quill('#editor', {
   },
   placeholder: "Start writing here!"
 });
+var li = false;
+var displayName = "";
+var uid = "";
 var namespace = document.querySelector("#password");
+var userShare = false;
+var warnAboutSharing = false;
 var config = {
   apiKey: "AIzaSyBGM0XNp3FGfq-KIvSdpL3XonkO5cv4pbM",
-  authDomain: "writer-6aa6d.firebaseapp.com",
-  databaseURL: "https://writer-6aa6d.firebaseio.com",
+  authDomain: "writer-6aa6d.firebaseapp.com",
+  databaseURL: "https://writer-6aa6d.firebaseio.com",
+  projectId: "writer-6aa6d",
+  storageBucket: "writer-6aa6d.appspot.com",
+  messagingSenderId: "1045232075598"
 };
 firebase.initializeApp(config);
 onload = function() {
   updateLength();
   hashChange();
   window.addEventListener("hashchange", hashChange);
-  /*
-  namespace.addEventListener("keypress", function() {
-  	load();
-  });
-  */
+  firebase.auth().onAuthStateChanged(function(user) {
+	  if (user) {
+	    // User is signed in.
+	    displayName = user.displayName;
+	    uid = user.uid;
+	    user.getToken().then(function(accessToken) {
+	      document.getElementById('account').textContent = 'Sign Out';
+	      document.getElementById('name').textContent = displayName;
+          document.querySelector("#private").style.visibility = "visible";
+	      li = true;
+	    });
+	  } else {
+	    // User is signed out.
+	    document.getElementById('account').textContent = 'Log In';
+	    document.getElementById('name').textContent = '';
+        document.querySelector("#private").style.visibility = "hidden";
+        document.querySelector("#prv").checked = false;
+	    li = false;
+	  }
+	}, function(error) {
+	  console.log(error);
+	});
   namespace.addEventListener("focus", function() {
   	// clearInterval(interval);
   })
   namespace.addEventListener("blur", function() {
+  	location.hash = "#" + (namespace.value.replace(/([\[\]?.#])+/g, "").replace(/[\s]/g, "."));
   	load();
   })
 }
@@ -138,17 +187,83 @@ quill.on('text-change', function(delta, oldDelta, source) {
   save();
   updateLength();
 });
+function makePrivate(val) {
+  return "private/" + uid + "/" + val;
+}
+function makePublic(val) {
+  return "public/" + val;
+}
+function makeVisible(val) {
+  return "visible/" + uid + "/" + val;
+}
 function save() {
   // localStorage.setItem("save", JSON.stringify(quill.getContents()));
+
   var val = namespace.value.replace(/([\[\]?.#])+/g, "");
-  firebase.database().ref(val || "delta").set(quill.getContents());
+  if(userShare){
+  	warnAboutSharing ? true : alert("This file has been shared with you. We will save any changes you make to a new shared workspace owned by you.")
+  	warnAboutSharing = true;
+  	val = "visible/" + uid + "/" + val;
+  }
+  else{
+    if (document.querySelector("#prv").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makePrivate(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else if (document.querySelector("#vis").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makeVisible(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else val = makePublic(val);
+  }
+  firebase.database().ref(val || "home").set(quill.getContents());
 }
 function load() {
   // quill.setContents(JSON.parse(localStorage.getItem("save")));
   var val = namespace.value.replace(/([\[\]?.#])+/g, "");
-  firebase.database().ref(val || "delta").once('value').then(function(data) {
+  if(userShare){
+  	val = "visible/" + userShare + "/" + val;
+  }
+  else{
+    if (document.querySelector("#prv").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makePrivate(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else if (document.querySelector("#vis").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makeVisible(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else val = makePublic(val);
+  }
+  firebase.database().ref(val || "home").once('value').then(function(data) {
     quill.setContents(data.val());
     updateLength();
+  }, function(err) {
+  	console.log(err);
   });
 }
 function updateLength() {
@@ -156,10 +271,64 @@ function updateLength() {
   document.querySelector("#word-count").innerText = length;
 }
 function hashChange() {
-  if (location.hash !== "") {
-  	namespace.value = location.hash.replace("#", "").replace(/[.]/g, " ");
+  userShare = false;
+  if (location.hash !== "" && location.hash.replace("#", "").replace(/[.]/g, " ") !== namespace.value.replace(/([\[\]?.#])+/g, "")) {
+  	if (location.hash.replace(/[^#]/g, "").length == 2) {
+  	  namespace.value = location.hash.split("#")[1].replace(/[.]/g, " ");
+  	  userShare = location.hash.split("#")[2];
+  	}
+  	else {
+  	  namespace.value = location.hash.replace("#", "").replace(/[.]/g, " ");
+    }
+  	load();
   }
-  load();
+  else {
+  	load();
+  }
+}
+function account() {
+  li ? signout() : login();
+}
+function signout() {
+  firebase.auth().signOut().then(function() {
+    document.getElementById('account').textContent = 'Log In';
+    document.getElementById('name').textContent = '';
+    document.querySelector("#private").style.visibility = "hidden";
+    document.querySelector("#prv").checked = false;
+    load();
+    li = false;
+  }, function(error) {
+  });
+}
+function login() {
+	var uiConfig = {
+		callbacks: {
+		  signInSuccess: function(currentUser, credential, redirectUrl) {
+            // Do something.
+            // Return type determines whether we continue the redirect automatically
+            // or whether we leave that to developer to handle.
+            document.querySelector("#auth").className = "hide";
+            document.querySelector("#private").style.visibility = "visible";
+            li = true;
+            return false;
+          },
+		},
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        // Terms of service url.
+        tosUrl: '<your-tos-url>',
+        credentialHelper: firebaseui.auth.CredentialHelper.NONE
+      };
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      if(!window.ui){
+	    window.ui = new firebaseui.auth.AuthUI(firebase.auth());
+	  }
+      document.querySelector("#auth").className = "show";
+      ui.start('#auth', uiConfig);
 }
 
 </script>
+</body>
