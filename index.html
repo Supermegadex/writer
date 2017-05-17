@@ -88,6 +88,32 @@
 	  background: rgba(0, 0, 0, .8);
 	  padding-top: 25px;
     }
+    .ip-wrapper {
+      width: 100%;
+	  border: 2px solid #808080;
+	  border-radius: 5px;
+	  background-color: #f4f4f4;
+	  font-size: 1.25em;
+	  padding: .25em .5em;
+	}
+	.card-content {
+	  padding-left: 25px;
+      width: 100%;
+	}
+	.card {
+	  background: #fff;
+	  margin: 50px;
+	  padding: 25px 50px 25px 50px;
+	  display: flex;
+	  align-items: center;
+	  transition: 500ms ease-in-out;
+	}
+	.share-url {
+	  border: none;
+	  background-color: #f4f4f4;
+	  font-size: 1.25em;
+	  width: 100%;
+	}
     a {
       color: #fff;
     }
@@ -98,10 +124,27 @@
   Loading...
 </div>
 <div id="bottom">
-  <span class="left">Word Count: <span id="word-count"></span>&nbsp;|&nbsp;<span id="name"></span> <a href="javascript:account()" id="account">Log In</a>&nbsp;<span id="private">|&nbsp;Private <input type="checkbox" id="prv" onclick="load()" />&nbsp;Visible <input type="checkbox" id="vis" onclick="load()" /></span></span>
+  <span class="left">Word Count: <span id="word-count"></span>&nbsp;|&nbsp;<span id="name"></span> <a href="javascript:account()" id="account">Log In</a>&nbsp;<span id="private">|&nbsp;Private <input type="checkbox" id="prv" onclick="load()" />&nbsp;Visible <input type="checkbox" id="vis" onclick="load()" /></span><span id="sharer">|&nbsp;<a href="javascript:share()">Share</a></span></span>
   <input id="password" type="text" placeholder="namespace" pattern="[A-z0-9À-ž\s]" />
 </div>
 <div id="auth" class="hidden"></div>
+<div id="share" class="hidden" click="exitShare()">
+  <div class="card">
+    <img src="close.svg" style="
+	    position: absolute;
+	    top: 80px;
+	    right: 60px;
+	    cursor: pointer;
+	" onclick="exitShare()">
+  	<h2 class="card-title">Share</h2>
+  	<div class="card-content">
+  	  <div class="ip-wrapper">
+  		<input class="share-url" disabled />
+  		<!--button class="share-copy"><img src="copy.svg" alt="copy" /></button-->
+  	  </div>
+  	</div>
+  </div>
+</div>
 <script src="https://cdn.quilljs.com/1.2.4/quill.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-app.js"></script>
@@ -110,22 +153,22 @@
 
 <script>
 var toolbarOptions = [
-  ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+  ['bold', 'italic', 'underline', 'strike'],
   ['blockquote', 'code-block', 'link', 'image'],
 
-  [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+  [{ 'header': 1 }, { 'header': 2 }],
   [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-  [{ 'direction': 'rtl' }],                         // text direction
+  [{ 'script': 'sub'}, { 'script': 'super' }],
+  [{ 'indent': '-1'}, { 'indent': '+1' }],
+  [{ 'direction': 'rtl' }],
 
-  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+  [{ 'size': ['small', false, 'large', 'huge'] }],
 
-  [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+  [{ 'color': [] }, { 'background': [] }],
   [{ 'font': [] }],
   [{ 'align': [] }],
 
-  ['clean']                                         // remove formatting button
+  ['clean']
 ];
 var quill = new Quill('#editor', {
   theme: 'snow',
@@ -175,6 +218,7 @@ onload = function() {
 	}, function(error) {
 	  console.log(error);
 	});
+  document.querySelector("#sharer").style.visibility = "hidden";
   namespace.addEventListener("focus", function() {
   	// clearInterval(interval);
   })
@@ -191,16 +235,23 @@ function makePrivate(val) {
   return "private/" + uid + "/" + val;
 }
 function makePublic(val) {
-  return "public/" + val;
+  return val ? "public/" + val : false;
 }
 function makeVisible(val) {
   return "visible/" + uid + "/" + val;
+}
+function share() {
+  document.querySelector("#share").className = "show";
+  document.querySelector(".share-url").value = "https://supermegadex.github.io/writer/#" + namespace.value.replace(/([\[\]?.#])+/g, "").replace(/[\s]/g, ".") + "#" + uid;
+}
+function exitShare() {
+  document.querySelector("#share").className = "hidden";
 }
 function save() {
   // localStorage.setItem("save", JSON.stringify(quill.getContents()));
 
   var val = namespace.value.replace(/([\[\]?.#])+/g, "");
-  if(userShare){
+  if(userShare && userShare !== uid){
   	warnAboutSharing ? true : alert("This file has been shared with you. We will save any changes you make to a new shared workspace owned by you.")
   	warnAboutSharing = true;
   	val = "visible/" + uid + "/" + val;
@@ -251,6 +302,7 @@ function load() {
   	  if (li) {
   	    if (val) {
   	  	  val = makeVisible(val);
+  		  document.querySelector("#sharer").visibility = "hidden";
   	    }
   	  }
   	  else {
@@ -279,6 +331,7 @@ function hashChange() {
   	}
   	else {
   	  namespace.value = location.hash.replace("#", "").replace(/[.]/g, " ");
+  	  userShare = false;
     }
   	load();
   }
@@ -295,6 +348,7 @@ function signout() {
     document.getElementById('name').textContent = '';
     document.querySelector("#private").style.visibility = "hidden";
     document.querySelector("#prv").checked = false;
+    document.querySelector("#sharer").style.visibility = "hidden";
     load();
     li = false;
   }, function(error) {
