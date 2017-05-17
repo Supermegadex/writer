@@ -128,7 +128,7 @@
   <input id="password" type="text" placeholder="namespace" pattern="[A-z0-9À-ž\s]" />
 </div>
 <div id="auth" class="hidden"></div>
-<div id="share" class="" click="exitShare()">
+<div id="share" class="hidden" click="exitShare()">
   <div class="card">
     <img src="close.svg" style="
 	    position: absolute;
@@ -232,15 +232,15 @@ quill.on('text-change', function(delta, oldDelta, source) {
   updateLength();
 });
 function makePrivate(val) {
-  document.querySelector("#sharer").visibility = "hidden";
+document.querySelector("#share").visibility = "visible";
   return "private/" + uid + "/" + val;
 }
 function makePublic(val) {
-  document.querySelector("#sharer").visibility = "hidden";
+  document.querySelector("#share").visibility = "visible";
   return val ? "public/" + val : false;
 }
 function makeVisible(val) {
-  document.querySelector("#sharer").visibility = "visible";
+  document.querySelector("#share").visibility = "visible";
   return "visible/" + uid + "/" + val;
 }
 function share() {
