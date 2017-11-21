@@ -1,9 +1,16 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8">
+  <meta charset="utf-8">
+  <title>Writer</title>
+  <meta name="description" content="Free writing on the web.">
+  <meta name="keywords" content="writing,poetry,free,simple,notes">
+  <meta name="author" content="Daniel Noon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.quilljs.com/1.2.4/quill.snow.css">
-  <link href="https://fonts.googleapis.com/css?family=Inconsolata|Libre+Baskerville|Quicksand" rel="stylesheet"> 
+  <link href="https://fonts.googleapis.com/css?family=Inconsolata|Libre+Baskerville|Quicksand" rel="stylesheet">
+  <script src="https://cdn.firebase.com/libs/firebaseui/1.0.1/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/1.0.1/firebaseui.css" />
   <style>
     body, html {
       background-color: #263238;
@@ -15,12 +22,10 @@
     }
     .ql-toolbar {
       background: white;
-      position: absolute;
+      position: fixed;
       z-index: 9999;
       top: 0;
       width: 100%;
-      white-space: nowrap;
-      overflow-x: auto;
     }
     #editor {
       color: white;
@@ -67,39 +72,103 @@
     .ql-editor .ql-font-monospace {
       font-family: "Inconsolata", Monaco, monospace !important;
     }
+    .hidden {
+      display: none;
+    }
+    .show {
+      display: block;
+      position: fixed;
+      z-index: 99999;
+      height: 100%;
+      width: 100%;
+	  top: 0;
+	  position: fixed;
+	  width: 100%;
+	  height: 100%;
+	  background: rgba(0, 0, 0, .8);
+	  padding-top: 25px;
+    }
+    .ip-wrapper {
+      width: 100%;
+	  border: 2px solid #808080;
+	  border-radius: 5px;
+	  background-color: #f4f4f4;
+	  font-size: 1.25em;
+	  padding: .25em .5em;
+	}
+	.card-content {
+	  padding-left: 25px;
+      width: 100%;
+	}
+	.card {
+	  background: #fff;
+	  margin: 50px;
+	  padding: 25px 50px 25px 50px;
+	  display: flex;
+	  align-items: center;
+	  transition: 500ms ease-in-out;
+	}
+	.share-url {
+	  border: none;
+	  background-color: #f4f4f4;
+	  font-size: 1.25em;
+	  width: 100%;
+	}
+    a {
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 <div id="editor">
-  <h1><span class="ql-font-monospace"># Welcome!</span></h1><p><span class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">This is </span><em class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">Writer</em><span class="ql-font-monospace" style="background-color: rgb(0, 97, 0);">, an über-simple text editor/manager/whatever that saves everything in the cloud.</span></p><p><span class="ql-font-monospace" style="background-color: rgb(178, 107, 0);">No need to save your work as you go, nor worry about files--we take care of that for you.</span></p><p><br></p><h2><span class="ql-font-monospace">## How does it work?</span></h2><p><span class="ql-font-monospace">For now, just choose a </span><u class="ql-font-monospace">namespace</u><span class="ql-font-monospace"> down at the bottom. If it's new, we'll make a new document. Otherwise, pick up where you left off on any device; no need for an account.</span></p><p><br></p><p><span class="ql-font-monospace">Of course, we're still working on features, as new as we are. Take a look at </span><u class="ql-font-monospace">## In Development</u><span class="ql-font-monospace"> for more information.</span></p><p><br></p><h2><span class="ql-font-monospace">## Why use Writer?</span></h2><p><span class="ql-font-monospace">Well, the reason I decided to make writer is so that I could just start writing any time I wanted and not worry about storing my work. School projects could be drafted, stories could be written. All of this without a filesystem, email, or a cloud drive. Think of </span><em class="ql-font-monospace">Writer</em><span class="ql-font-monospace"> as a notes app but much more rich and completely cross-platform. It's </span><em class="ql-font-monospace">not</em><span class="ql-font-monospace"> meant for big nor media-rich projects, but it's great for informal papers, short stories, poetry, or just notes. Please know, however, that everything is public and could be viewed by anyone. Think before you post.</span></p><p><br></p><h2><span class="ql-font-monospace">## More information:</span></h2><p><span class="ql-font-monospace">I use the amazing&nbsp;open-source software </span><a class="ql-font-monospace" href="https://quilljs.com/" target="_blank">Quill</a><span class="ql-font-monospace"> for the actual text-editing functionality. I </span><em class="ql-font-monospace">highly</em><span class="ql-font-monospace"> recommend it. I also need to provide a license, which I have </span><a class="ql-font-monospace" href="https://supermegadex.github.io/writer/quill-license.txt" target="_blank">right here</a><span class="ql-font-monospace">.</span></p><p><br></p><h2><span class="ql-font-monospace">## In Development</span></h2><ul><li><span class="ql-font-monospace">Private workspaces: we are working on a feature that allows for a simple login for private spaces to write. No one will be able to see them, so you can rest easy knowing you will own the work. This is the first priority.</span></li><li><span class="ql-font-monospace">Real-time collaboration: any public workspace will show collaborators and instant changes to the document. Second priority.</span></li><li><span class="ql-font-monospace">Shared workspaces: like private, but you can share with specific users. Real-time collaboration will be implemented for better productivity.</span></li></ul>
+  Loading...
 </div>
 <div id="bottom">
-  <span class="left">Word Count: <span id="word-count"></span></span>
+  <span class="left">Word Count: <span id="word-count"></span>&nbsp;|&nbsp;<span id="name"></span> <a href="javascript:account()" id="account">Log In</a>&nbsp;<span id="private">|&nbsp;Private <input type="checkbox" id="prv" onclick="load()" />&nbsp;Visible <input type="checkbox" id="vis" onclick="load()" /></span><span id="sharer">|&nbsp;<a href="javascript:share()">Share</a></span></span>
   <input id="password" type="text" placeholder="namespace" pattern="[A-z0-9À-ž\s]" />
+</div>
+<div id="auth" class="hidden"></div>
+<div id="share" class="hidden" click="exitShare()">
+  <div class="card">
+    <img src="close.svg" style="
+	    position: absolute;
+	    top: 80px;
+	    right: 60px;
+	    cursor: pointer;
+	" onclick="exitShare()">
+  	<h2 class="card-title">Share</h2>
+  	<div class="card-content">
+  	  <div class="ip-wrapper">
+  		<input class="share-url" disabled />
+  		<!--button class="share-copy"><img src="copy.svg" alt="copy" /></button-->
+  	  </div>
+  	</div>
+  </div>
 </div>
 <script src="https://cdn.quilljs.com/1.2.4/quill.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-database.js"></script>
 
 <script>
 var toolbarOptions = [
-  ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+  ['bold', 'italic', 'underline', 'strike'],
   ['blockquote', 'code-block', 'link', 'image'],
 
-  [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+  [{ 'header': 1 }, { 'header': 2 }],
   [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-  [{ 'direction': 'rtl' }],                         // text direction
+  [{ 'script': 'sub'}, { 'script': 'super' }],
+  [{ 'indent': '-1'}, { 'indent': '+1' }],
+  [{ 'direction': 'rtl' }],
 
-  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+  [{ 'size': ['small', false, 'large', 'huge'] }],
 
-  [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+  [{ 'color': [] }, { 'background': [] }],
   [{ 'font': [] }],
   [{ 'align': [] }],
 
-  ['clean']                                         // remove formatting button
+  ['clean']
 ];
 var quill = new Quill('#editor', {
   theme: 'snow',
@@ -108,25 +177,53 @@ var quill = new Quill('#editor', {
   },
   placeholder: "Start writing here!"
 });
+var li = false;
+var displayName = "";
+var uid = "";
 var namespace = document.querySelector("#password");
+var userShare = false;
+var warnAboutSharing = false;
 var config = {
   apiKey: "AIzaSyBGM0XNp3FGfq-KIvSdpL3XonkO5cv4pbM",
-  authDomain: "writer-6aa6d.firebaseapp.com",
-  databaseURL: "https://writer-6aa6d.firebaseio.com",
+  authDomain: "writer-6aa6d.firebaseapp.com",
+  databaseURL: "https://writer-6aa6d.firebaseio.com",
+  projectId: "writer-6aa6d",
+  storageBucket: "writer-6aa6d.appspot.com",
+  messagingSenderId: "1045232075598"
 };
 firebase.initializeApp(config);
 onload = function() {
   updateLength();
-  // load();
-  /*
-  namespace.addEventListener("keypress", function() {
-  	load();
-  });
-  */
+  hashChange();
+  window.addEventListener("hashchange", hashChange);
+  firebase.auth().onAuthStateChanged(function(user) {
+	  if (user) {
+	    // User is signed in.
+	    displayName = user.displayName;
+	    uid = user.uid;
+	    user.getToken().then(function(accessToken) {
+	      document.getElementById('account').textContent = 'Sign Out';
+	      document.getElementById('name').textContent = displayName;
+          document.querySelector("#private").style.visibility = "visible";
+	      li = true;
+	    });
+	  } else {
+	    // User is signed out.
+	    document.getElementById('account').textContent = 'Log In';
+	    document.getElementById('name').textContent = '';
+        document.querySelector("#private").style.visibility = "hidden";
+        document.querySelector("#prv").checked = false;
+	    li = false;
+	  }
+	}, function(error) {
+	  console.log(error);
+	});
+  document.querySelector("#sharer").style.visibility = "hidden";
   namespace.addEventListener("focus", function() {
   	// clearInterval(interval);
   })
   namespace.addEventListener("blur", function() {
+  	location.hash = "#" + (namespace.value.replace(/([\[\]?.#])+/g, "").replace(/[\s]/g, "."));
   	load();
   })
 }
@@ -134,22 +231,160 @@ quill.on('text-change', function(delta, oldDelta, source) {
   save();
   updateLength();
 });
+function makePrivate(val) {
+document.querySelector("#share").visibility = "visible";
+  return "private/" + uid + "/" + val;
+}
+function makePublic(val) {
+  document.querySelector("#share").visibility = "visible";
+  return val ? "public/" + val : false;
+}
+function makeVisible(val) {
+  document.querySelector("#share").visibility = "visible";
+  return "visible/" + uid + "/" + val;
+}
+function share() {
+  document.querySelector("#share").className = "show";
+  document.querySelector(".share-url").value = "https://supermegadex.github.io/writer/#" + namespace.value.replace(/([\[\]?.#])+/g, "").replace(/[\s]/g, ".") + "#" + uid;
+}
+function exitShare() {
+  document.querySelector("#share").className = "hidden";
+}
 function save() {
   // localStorage.setItem("save", JSON.stringify(quill.getContents()));
+
   var val = namespace.value.replace(/([\[\]?.#])+/g, "");
-  firebase.database().ref(val || "delta").set(quill.getContents());
+  if(userShare && userShare !== uid){
+  	warnAboutSharing ? true : alert("This file has been shared with you. We will save any changes you make to a new shared workspace owned by you.")
+  	warnAboutSharing = true;
+  	val = "visible/" + uid + "/" + val;
+  }
+  else{
+    if (document.querySelector("#prv").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makePrivate(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else if (document.querySelector("#vis").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makeVisible(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else val = makePublic(val);
+  }
+  firebase.database().ref(val || "home").set(quill.getContents());
 }
 function load() {
   // quill.setContents(JSON.parse(localStorage.getItem("save")));
   var val = namespace.value.replace(/([\[\]?.#])+/g, "");
-  firebase.database().ref(val || "delta").once('value').then(function(data) {
+  if(userShare){
+  	val = "visible/" + userShare + "/" + val;
+  }
+  else{
+    if (document.querySelector("#prv").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makePrivate(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else if (document.querySelector("#vis").checked) {
+  	  if (li) {
+  	    if (val) {
+  	  	  val = makeVisible(val);
+  	    }
+  	  }
+  	  else {
+  	    val = makePublic(val);
+  	  }
+    }
+    else val = makePublic(val);
+  }
+  firebase.database().ref(val || "home").once('value').then(function(data) {
     quill.setContents(data.val());
     updateLength();
+  }, function(err) {
+  	console.log(err);
   });
 }
 function updateLength() {
   var length = quill.getText().split(/\S+/g).length;
   document.querySelector("#word-count").innerText = length;
 }
+function hashChange() {
+  userShare = false;
+  if (location.hash !== "" && location.hash.replace("#", "").replace(/[.]/g, " ") !== namespace.value.replace(/([\[\]?.#])+/g, "")) {
+  	if (location.hash.replace(/[^#]/g, "").length == 2) {
+  	  namespace.value = location.hash.split("#")[1].replace(/[.]/g, " ");
+  	  userShare = location.hash.split("#")[2];
+  	}
+  	else {
+  	  namespace.value = location.hash.replace("#", "").replace(/[.]/g, " ");
+  	  userShare = false;
+    }
+  	load();
+  }
+  else {
+  	load();
+  }
+}
+function account() {
+  li ? signout() : login();
+}
+function signout() {
+  firebase.auth().signOut().then(function() {
+    document.getElementById('account').textContent = 'Log In';
+    document.getElementById('name').textContent = '';
+    document.querySelector("#private").style.visibility = "hidden";
+    document.querySelector("#prv").checked = false;
+    document.querySelector("#sharer").style.visibility = "hidden";
+    load();
+    li = false;
+  }, function(error) {
+  });
+}
+function login() {
+	var uiConfig = {
+		callbacks: {
+		  signInSuccess: function(currentUser, credential, redirectUrl) {
+            // Do something.
+            // Return type determines whether we continue the redirect automatically
+            // or whether we leave that to developer to handle.
+            document.querySelector("#auth").className = "hide";
+            document.querySelector("#private").style.visibility = "visible";
+            li = true;
+            return false;
+          },
+		},
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        // Terms of service url.
+        tosUrl: '<your-tos-url>',
+        credentialHelper: firebaseui.auth.CredentialHelper.NONE
+      };
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      if(!window.ui){
+	    window.ui = new firebaseui.auth.AuthUI(firebase.auth());
+	  }
+      document.querySelector("#auth").className = "show";
+      ui.start('#auth', uiConfig);
+}
 
 </script>
+</body>

@@ -93,9 +93,9 @@ var config = {
   databaseURL: "https://writer-6aa6d.firebaseio.com",
 };
 firebase.initializeApp(config);
+var intvl;
 onload = function() {
-  updateLength();
-  load()
+  load();
 }
 quill.on('text-change', function(delta, oldDelta, source) {
   save();
@@ -103,10 +103,12 @@ quill.on('text-change', function(delta, oldDelta, source) {
 });
 function load() {
   // quill.setContents(JSON.parse(localStorage.getItem("save")));
-  namespace.value = location.hash.replace("#", "");
-  firebase.database().ref(location.hash.replace("#", "")).once('value').then(function(data) {
+  var userShare = location.hash.replace(/[^#]/g, "").length == 2 ? location.hash.split("#")[2] : false;
+  var space = userShare ? "visible/" + userShare + "/" + location.hash.split("#")[1].replace("#", "").replace(/[.]/g, " ") : "public/" + location.hash.replace("#", "").replace(/[.]/g, " ");
+  namespace.value = userShare ? location.hash.split("#")[1].replace("#", "").replace(/[.]/g, " ") : location.hash.replace("#", "").replace(/[.]/g, " ");;
+  firebase.database().ref(space).once('value').then(function(data) {
+    setTimeout(updateLength, 2000);
     quill.setContents(data.val());
-    updateLength();
   });
 }
 function updateLength() {
